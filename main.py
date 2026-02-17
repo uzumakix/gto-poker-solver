@@ -20,9 +20,9 @@ import json
 import sys
 from pathlib import Path
 
-from .poker_env import BoardTexture, RiverEndgameEnv
-from .cfr_solver import CFRSolver
-from .visualisation import render_dashboard
+from gto_poker_solver.poker_env import BoardTexture, RiverEndgameEnv
+from gto_poker_solver.cfr_solver import CFRSolver
+from gto_poker_solver.visualisation import render_dashboard
 
 
 # ── Defaults ──────────────────────────────────────────────────────────
