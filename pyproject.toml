@@ -9,7 +9,7 @@ description = "CFR-based Nash equilibrium solver for No-Limit Hold'em river endg
 readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.10"
-authors = [{name = "GTO Research Lab"}]
+authors = [{name = "uzumakix"}]
 keywords = ["poker", "cfr", "game-theory", "nash-equilibrium", "reinforcement-learning"]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -23,7 +23,7 @@ classifiers = [
 ]
 
 dependencies = [
-    "numpy>=1.24.0,<2.0",
+    "numpy>=1.24.0",
     "matplotlib>=3.7.0",
     "scipy>=1.10.0",
 ]
@@ -40,8 +40,8 @@ dev = [
 gto-solve = "gto_poker_solver.main:main"
 
 [project.urls]
-Repository = "https://github.com/your-org/gto-poker-solver"
-Documentation = "https://github.com/your-org/gto-poker-solver#readme"
+Repository = "https://github.com/uzumakix/gto-poker-solver"
+Documentation = "https://github.com/uzumakix/gto-poker-solver#readme"
 
 [tool.setuptools.packages.find]
 include = ["gto_poker_solver*"]
