@@ -4,7 +4,7 @@ solve.py -- Run CFR+ and generate convergence + strategy visuals
 
 Trains a CFR+ solver on Kuhn Poker, prints the resulting Nash
 equilibrium strategies, and saves:
-    results/convergence.png   -- log-scale exploitability over iterations
+    results/convergence.png      -- log-scale exploitability over iterations
     results/strategy_heatmap.png -- action probabilities per info set
 """
 
@@ -13,7 +13,6 @@ import os
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-import matplotlib.ticker as ticker
 import numpy as np
 import seaborn as sns
 
@@ -79,40 +78,48 @@ def plot_convergence(history):
     print("Saved convergence.png")
 
 
+# maps info set key to a human-readable row label and the
+# meaning of "action 0" and "action 1" at that decision point
+_INFO_SET_LABELS = {
+    # P0 root decisions
+    "J":    ("P0  J  opening",      "Check",  "Bet (bluff)"),
+    "Q":    ("P0  Q  opening",      "Check",  "Bet"),
+    "K":    ("P0  K  opening",      "Check",  "Bet (value)"),
+    # P1 facing bet
+    "J b":  ("P1  J  facing bet",   "Fold",   "Call"),
+    "Q b":  ("P1  Q  facing bet",   "Fold",   "Call"),
+    "K b":  ("P1  K  facing bet",   "Fold",   "Call"),
+    # P1 after check
+    "J p":  ("P1  J  after check",  "Check",  "Bet (bluff)"),
+    "Q p":  ("P1  Q  after check",  "Check",  "Bet"),
+    "K p":  ("P1  K  after check",  "Check",  "Bet (value)"),
+    # P0 facing bet after check-bet
+    "J pb": ("P0  J  facing raise", "Fold",   "Call"),
+    "Q pb": ("P0  Q  facing raise", "Fold",   "Call"),
+    "K pb": ("P0  K  facing raise", "Fold",   "Call"),
+}
+
+# display order: P0 root, P1 facing bet, P1 after check, P0 facing raise
+_DISPLAY_ORDER = [
+    "J", "Q", "K",
+    "J b", "Q b", "K b",
+    "J p", "Q p", "K p",
+    "J pb", "Q pb", "K pb",
+]
+
+
 def plot_heatmap(strategy_table):
     """Strategy heatmap: rows = info sets, columns = actions."""
-    # separate player 0 and player 1 info sets for cleaner layout
-    keys_p0 = []
-    keys_p1 = []
-    for k in strategy_table:
-        parts = k.split()
-        if len(parts) == 1:
-            # root node (player 0, no history)
-            keys_p0.append(k)
-        else:
-            history = parts[1]
-            player = len(history) % 2
-            if player == 0:
-                keys_p0.append(k)
-            else:
-                keys_p1.append(k)
-
-    all_keys = keys_p0 + keys_p1
+    keys = [k for k in _DISPLAY_ORDER if k in strategy_table]
     labels = []
-    for k in all_keys:
-        parts = k.split()
-        card = parts[0]
-        hist = parts[1] if len(parts) > 1 else "(root)"
-        # indicate which player
-        if k in keys_p0:
-            labels.append(f"P0 | {card} | {hist}")
-        else:
-            labels.append(f"P1 | {card} | {hist}")
+    for k in keys:
+        label, _, _ = _INFO_SET_LABELS.get(k, (k, "pass", "bet"))
+        labels.append(label)
 
-    data = np.array([strategy_table[k] for k in all_keys])
-    col_labels = ["Pass / Check / Fold", "Bet / Call"]
+    data = np.array([strategy_table[k] for k in keys])
+    col_labels = ["Action 0 (pass)", "Action 1 (bet)"]
 
-    fig, ax = plt.subplots(figsize=(7, max(5, len(all_keys) * 0.45)))
+    fig, ax = plt.subplots(figsize=(7, max(5, len(keys) * 0.42)))
     sns.heatmap(
         data, annot=True, fmt=".3f", cmap="YlOrRd",
         xticklabels=col_labels, yticklabels=labels,
@@ -122,8 +129,10 @@ def plot_heatmap(strategy_table):
     ax.set_title("Nash Equilibrium Strategy Profile", fontsize=13)
     ax.tick_params(axis="y", rotation=0)
 
-    # divider between P0 and P1
-    ax.axhline(y=len(keys_p0), color="black", linewidth=2)
+    # draw dividers between player groups (P0 root | P1 bet | P1 check | P0 raise)
+    for boundary in [3, 6, 9]:
+        if boundary <= len(keys):
+            ax.axhline(y=boundary, color="black", linewidth=1.5)
 
     fig.tight_layout()
     fig.savefig(os.path.join(RESULTS_DIR, "strategy_heatmap.png"), dpi=150)
